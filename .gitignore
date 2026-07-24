@@ -1,9 +1,62 @@
-# .gitignore
-.env
-backend/.env
-backend/venv/
+# =========================
+# Python
+# =========================
 __pycache__/
 *.pyc
-frontend/.env   (if any)
+*.pyo
+*.pyd
+*.log
+
+# Virtual Environment
+backend/venv/
+venv/
 .env
-backend/__pycache__/
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+
+# =========================
+# Environment Files
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Secrets
+# =========================
+secrets.json
+credentials.json
+
+# =========================
+# Database Dumps
+# =========================
+*.sql
+*.dump
+*.bak
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Temporary Files
+# =========================
+tmp/
+temp/

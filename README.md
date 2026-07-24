@@ -1,152 +1,507 @@
-GOHAR TRADERS – Inventory & Sales Management System
-A complete, production‑ready Inventory, Sales, Expense, Udhar (Credit), and Reporting system built for small trading businesses.
+# GOHAR TRADERS – Inventory & Sales Management System
 
-🚀 Tech Stack
-Layer	Technology
-Frontend	HTML, CSS (Tailwind), JavaScript, Axios
-Backend	FastAPI (Python 3.11)
-Database	PostgreSQL (Supabase / Neon)
-Auth	JWT (access + refresh tokens)
-Icons	Font Awesome 6
-Notifications	Custom toast & modal system
-📦 Features
-Authentication
-Signup (max 5 users, first = Owner), Login, Forgot Password (email token or master key ZENVORA), JWT with auto‑refresh.
+A complete, production-ready Inventory, Sales, Expense, Udhar (Credit), and Reporting system built specifically for small and medium trading businesses.
 
-Inventory
-3 fixed categories (Cold Drinks, Juices, Eggs). Dynamic products with brand, container type, size.
-Batch tracking with auto‑generated batch IDs, purchase/selling prices, and stock levels.
+---
 
-FIFO Sales Engine
-Sales automatically consume the oldest batches first. Multi‑batch sales create separate line items per batch with correct pricing.
+# 🚀 Tech Stack
 
-Expense Tracker
-Separate HOME and SHOP expenses, filterable by date and type.
+| Layer | Technology |
+|---------|------------|
+| Frontend | HTML, CSS (Tailwind), JavaScript, Axios |
+| Backend | FastAPI (Python 3.12) |
+| Database | PostgreSQL (Supabase) |
+| Authentication | JWT (Access + Refresh Tokens) |
+| ORM | SQLAlchemy 2.0 |
+| Validation | Pydantic v2 |
+| Password Hashing | Argon2 |
+| Containerization | Docker |
+| Web Server | Nginx |
 
-Udhar (Credit) Management
-Receivable & Payable entries with partial payment support and settlement tracking.
+---
 
-Reports
-Date‑range reports: sales summary, brand‑wise, category‑wise, batch‑wise, revenue, expenses, profit/loss, remaining inventory with value.
+# 📦 Features
 
-Dashboard
-Today’s sales, profit/loss, top products, low‑stock alerts, last sale, receivables/payables, completed batch notifications, current inventory value.
+## Authentication
 
-Security
-Argon2 password hashing, input validation, CORS, audit logging, soft deletes, role‑based access (Owner/Staff).
+- User Signup
+- User Login
+- Forgot Password
+- JWT Authentication
+- Auto Token Refresh
+- Maximum 5 User Accounts
+- First Registered User becomes Owner
 
-Premium UI
-Dark theme, glassmorphism cards, skeleton loaders, sliding toast notifications, custom confirmation modals.
+---
 
-📁 Project Structure
-text
+## Inventory Management
+
+### Fixed Categories
+
+- Cold Drinks
+- Juices
+- Eggs
+
+### Product Management
+
+- Dynamic Product Creation
+- Brand Management
+- Container Type Management
+- Size Management
+- Soft Delete Support
+
+### Batch Management
+
+- Auto Generated Batch Numbers
+- Purchase Price Tracking
+- Selling Price Tracking
+- Remaining Stock Tracking
+- Batch Completion Detection
+
+---
+
+## FIFO Sales Engine
+
+- Automatic FIFO Stock Consumption
+- Multi-Batch Sale Handling
+- Accurate Cost of Goods Sold (COGS)
+- Real-Time Stock Updates
+- Inventory Locking During Sales
+
+---
+
+## Expense Management
+
+- Shop Expenses
+- Home Expenses
+- Date Filtering
+- Expense Deletion
+- Expense Analytics
+
+---
+
+## Udhar (Credit) Management
+
+### Receivable Entries
+
+- Customer Credit
+- Partial Payments
+- Settlement Tracking
+
+### Payable Entries
+
+- Supplier Payments
+- Outstanding Balances
+- Payment History
+
+---
+
+## Reports
+
+- Sales Reports
+- Profit & Loss Reports
+- Expense Reports
+- Category Reports
+- Brand Reports
+- Batch Reports
+- Inventory Valuation Reports
+- Remaining Stock Reports
+
+---
+
+## Dashboard
+
+Real-Time Dashboard Metrics:
+
+- Today's Revenue
+- Today's Profit
+- Total Inventory Value
+- Low Stock Alerts
+- Active Udhar Records
+- Pending Payments
+- Recent Sales
+- Completed Batch Notifications
+
+---
+
+## Security Features
+
+- Argon2 Password Hashing
+- JWT Authentication
+- Role-Based Access Control
+- Input Validation
+- Protected API Endpoints
+- Audit Logging
+- Soft Deletes
+
+---
+
+## User Roles
+
+### Owner
+
+Full Access:
+
+- Manage Users
+- Manage Inventory
+- Manage Sales
+- Manage Expenses
+- Manage Udhar
+- Access Reports
+- Delete Records
+
+### Staff
+
+Limited Access:
+
+- Create Sales
+- Add Inventory
+- Add Expenses
+- Add Udhar Entries
+
+Restricted From:
+
+- Deleting Critical Records
+- System Administration
+
+---
+
+# 📁 Project Structure
+
+```text
 shop-management/
+│
 ├── backend/
-│   ├── routers/           # API route handlers
-│   ├── main.py            # FastAPI app entry point
-│   ├── models.py          # SQLAlchemy ORM models
-│   ├── schemas.py         # Pydantic request/response schemas
-│   ├── security.py        # Password hashing & JWT utilities
-│   ├── config.py          # Environment variable loader
-│   ├── database.py        # Database connection & session
-│   ├── dependencies.py    # JWT user dependency
-│   └── requirements.txt   # Python dependencies
-└── frontend/
-    ├── js/
-    │   └── toast.js       # Toast notification & confirm modal
-    ├── *.html             # All application pages
-🔧 Prerequisites
-Python 3.11+ (with pip)
+│   ├── routers/
+│   ├── main.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── database.py
+│   ├── security.py
+│   ├── dependencies.py
+│   ├── config.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── .dockerignore
+│
+├── frontend/
+│   ├── js/
+│   ├── login.html
+│   ├── signup.html
+│   ├── dashboard.html
+│   ├── inventory.html
+│   ├── sales.html
+│   ├── expenses.html
+│   ├── reports.html
+│   ├── udhar.html
+│   ├── forgot-password.html
+│   └── Dockerfile
+│
+├── .gitignore
+└── README.md
+```
 
-PostgreSQL database (Supabase free tier or Neon.tech recommended)
+---
 
-Node.js (only if using Docker – not required for manual run)
+# ⚙️ Environment Variables
 
-⚙️ Environment Variables
-Create a .env file inside backend/ (or root) with the following:
+Create a `.env` file inside the backend folder.
 
-env
-SUPABASE_DB_URL=postgresql://postgres:YOUR_PASSWORD@db.xxxxx.supabase.co:6543/postgres?sslmode=require
-SECRET_KEY=your-very-long-random-secret-key
+```env
+SUPABASE_DB_URL=YOUR_SUPABASE_POOLER_CONNECTION_STRING
+SECRET_KEY=YOUR_SECRET_KEY
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ALGORITHM=HS256
-Replace YOUR_PASSWORD with your actual database password (use %40 for @).
+```
 
-For Neon database, use the connection string from the Neon dashboard (standard IPv4 hostname).
+Example:
 
-🏃 Running the Application (Manual Mode – No Docker)
-1. Backend Setup
-bash
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1          # Windows PowerShell
-# source venv/bin/activate           # macOS/Linux
-pip install -r requirements.txt
-2. Start Backend
-bash
-uvicorn main:app --reload
-Port: 8000
+```env
+SUPABASE_DB_URL=postgresql://postgres.PROJECT_REF:PASSWORD@aws-1-ap-south-1.pooler.supabase.com:6543/postgres
+SECRET_KEY=your-long-random-secret-key
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+ALGORITHM=HS256
+```
 
-Verify: Open http://localhost:8000/health → {"status":"ok","database":"connected"}
+⚠️ Never upload your `.env` file to GitHub.
 
-3. Start Frontend
-Open a second terminal in the frontend/ folder:
+---
 
-bash
-python -m http.server 3000
-If port 3000 is occupied, use any free port (e.g., 5000) – adjust the URL accordingly.
+# 🏃 Running Application (Docker)
 
-Open browser: http://localhost:3000/login.html
+## Build Backend
 
-🧪 Testing with Fake Data
-Use the provided System Testing Guide (see docs/testing-guide.md or ask the AI) to populate inventory, record sales, add expenses, udhar entries, and generate reports.
+```bash
+docker build -t gohar-backend ./backend
+```
 
-📄 API Documentation
-Full Swagger UI available at http://localhost:8000/docs.
-Endpoints are grouped under:
+## Build Frontend
 
-auth – signup, login, refresh, forgot/reset password, master reset
+```bash
+docker build -t gohar-frontend ./frontend
+```
 
-inventory – categories, products CRUD, batches
+---
 
-sales – create sale (FIFO), list sales
+## Start Backend Container
 
-expenses – add, list, filter, delete
+```bash
+docker run -d --name gohar-backend-container -p 8000:8000 gohar-backend
+```
 
-udhar – create, list, pay, settle, delete
+---
 
-reports – all analytical reports
+## Start Frontend Container
 
-dashboard – aggregated real‑time data
+```bash
+docker run -d --name gohar-frontend-container -p 3000:80 gohar-frontend
+```
 
-📝 Database Schema
-All tables are created via init.sql (provided in the backend folder). The schema includes:
+---
 
-users, categories, products, batches, sales, sale_items, batch_consumption, expenses, udhar, audit_logs, password_reset_tokens
+## Stop Backend
 
-Batch IDs are auto‑generated by a PostgreSQL trigger as BATCH-YYYYMMDD-NNN.
+```bash
+docker stop gohar-backend-container
+```
 
-🤝 Contributing / Extending
-Add new API endpoints in backend/routers/ and register in main.py.
+---
 
-New frontend pages should follow the existing template: include js/toast.js, use Axios with API_BASE = 'http://localhost:8000', and maintain the dark theme classes.
+## Stop Frontend
 
-🐛 Troubleshooting
-Symptom	Solution
-Network is unreachable (health error)	Use pooler port 6543 + ?sslmode=require. If persistent, switch to Neon.
-PermissionError: [WinError 10013]	Port 3000 already in use. Kill the process or use another port.
-401 Unauthorized on API calls	Login first; token may be expired – refresh via /auth/refresh.
-Frontend looks broken	Clear browser cache, ensure toast.js is loaded.
-🚢 Deployment
-Backend: Can be served with gunicorn + uvicorn workers, or via Docker (see separate Docker documentation).
+```bash
+docker stop gohar-frontend-container
+```
 
-Frontend: Serve the frontend/ folder with Nginx or any static file server.
+---
 
-Database: Use a managed PostgreSQL service (Neon, AWS RDS, DigitalOcean) with IPv4 support.
+## Start Existing Containers Again
 
-👨‍💻 Developed by
+```bash
+docker start gohar-backend-container
+docker start gohar-frontend-container
+```
+
+---
+
+## Remove Containers
+
+```bash
+docker rm gohar-backend-container
+docker rm gohar-frontend-container
+```
+
+---
+
+# 🌐 Service URLs
+
+## Frontend
+
+```text
+http://localhost:3000/login.html
+```
+
+---
+
+## Backend API
+
+```text
+http://localhost:8000
+```
+
+---
+
+## Swagger API Documentation
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+## Health Check
+
+```text
+http://localhost:8000/health
+```
+
+Expected Response:
+
+```json
+{
+  "status": "ok",
+  "database": "connected"
+}
+```
+
+---
+
+# 🧪 Application Workflow
+
+1. User Login
+2. Dashboard Loads
+3. Inventory Creation
+4. Batch Addition
+5. Product Sales
+6. FIFO Consumption
+7. Expense Tracking
+8. Udhar Tracking
+9. Reports Generation
+10. Profit/Loss Analysis
+
+---
+
+# 🗄 Database
+
+Database Provider:
+
+```text
+Supabase PostgreSQL
+```
+
+Connection Method:
+
+```text
+Supabase Pooler (IPv4 Compatible)
+```
+
+Benefits:
+
+- Stable Docker Connectivity
+- Connection Pooling
+- Better Scalability
+- Production Ready
+
+---
+
+# 📄 API Modules
+
+## Auth
+
+- Signup
+- Login
+- Refresh Token
+- Forgot Password
+- Reset Password
+
+## Inventory
+
+- Categories
+- Products
+- Batches
+
+## Sales
+
+- Create Sale
+- View Sales
+
+## Expenses
+
+- Add Expense
+- View Expenses
+- Delete Expense
+
+## Udhar
+
+- Create Udhar
+- Payments
+- Settlements
+
+## Reports
+
+- Revenue Reports
+- Profit Reports
+- Inventory Reports
+
+## Dashboard
+
+- Real-Time Analytics
+
+---
+
+# 🐛 Troubleshooting
+
+## Database Connection Error
+
+If you see:
+
+```text
+Network is unreachable
+```
+
+Use:
+
+```text
+Supabase Pooler Connection String
+```
+
+instead of:
+
+```text
+db.project.supabase.co
+```
+
+---
+
+## Login Issues
+
+Verify:
+
+- Backend Container Running
+- Frontend Container Running
+- Database Connected
+- JWT Token Generated
+
+---
+
+## Docker Container Not Running
+
+Check:
+
+```bash
+docker ps
+```
+
+View Logs:
+
+```bash
+docker logs gohar-backend-container
+docker logs gohar-frontend-container
+```
+
+---
+
+# 🚀 Production Deployment
+
+Current Setup:
+
+```text
+Frontend Container
+        ↓
+FastAPI Backend Container
+        ↓
+Supabase PostgreSQL
+```
+
+Suitable For:
+
+- Retail Shops
+- Grocery Stores
+- Beverage Distributors
+- Small Trading Businesses
+
+---
+
+# 👨‍💻 Developed By
+
 Awais Ismail
+
 Powered by Zenvora AI
 
-📃 License
-All rights reserved. This project is proprietary. Not for redistribution without explicit permission.
+---
+
+# 📃 License
+
+All Rights Reserved.
+
+This software is proprietary and may not be redistributed without permission.
