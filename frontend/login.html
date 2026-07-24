@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOHAR TRADERS - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        secondary: '#A855F7',
+                        accent: '#06B6D4',
+                        dark: { bg: '#0B1120', surface: '#111827', card: '#1F2937' },
+                        muted: '#94A3B8',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: linear-gradient(135deg, #0B1120 0%, #111827 50%, #0B1120 100%); font-family: 'Segoe UI', sans-serif; }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .input-field { width: 100%; background: #111827; border: 1px solid #374151; border-radius: 12px; padding: 12px 16px; color: white; transition: all 0.2s; }
+        .input-field:focus { outline: none; border-color: #7C3AED; box-shadow: 0 0 0 3px rgba(124,58,237,0.3); }
+        .btn-primary { background: linear-gradient(135deg, #7C3AED, #A855F7); color: white; font-weight: 600; padding: 14px; border-radius: 12px; cursor: pointer; transition: all 0.3s; border: none; }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(124,58,237,0.5); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="glass rounded-3xl p-8 w-full max-w-md shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-purple-500 to-cyan-400 bg-clip-text text-transparent">GOHAR TRADERS</h1>
+            <p class="text-gray-400 mt-2">Sign in to your account</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                <input type="email" id="email" required class="input-field" placeholder="you@example.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                <input type="password" id="password" required class="input-field" placeholder="••••••••">
+            </div>
+            <button type="submit" id="loginBtn" class="btn-primary w-full">Sign In</button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-gray-400">
+            <a href="forgot-password.html" class="text-purple-400 hover:underline">Forgot password?</a>
+            <span class="mx-2">·</span>
+            <a href="signup.html" class="text-purple-400 hover:underline">Create account</a>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-2xl p-8 text-center">
+            <div class="animate-spin text-4xl mb-4"><i class="fas fa-circle-notch text-purple-500"></i></div>
+            <p class="text-white">Signing in...</p>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            const overlay = document.getElementById('loadingOverlay');
+
+            btn.disabled = true;
+            overlay.classList.remove('hidden');
+
+            try {
+                const res = await axios.post(`${API_BASE}/auth/login`, { email, password });
+                localStorage.setItem('access_token', res.data.access_token);
+                localStorage.setItem('refresh_token', res.data.refresh_token);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                let msg = 'Login failed. Please try again.';
+                if (err.response?.data?.detail) {
+                    msg = err.response.data.detail;
+                }
+                showToast(msg, 'error');
+            } finally {
+                btn.disabled = false;
+                overlay.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

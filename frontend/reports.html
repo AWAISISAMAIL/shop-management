@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOHAR TRADERS - Reports</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        secondary: '#A855F7',
+                        accent: '#06B6D4',
+                        dark: { bg: '#0B1120', surface: '#111827', card: '#1F2937' },
+                        muted: '#94A3B8',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #0B1120; font-family: 'Segoe UI', sans-serif; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94A3B8; transition: all 0.2s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(124,58,237,0.1); color: #7C3AED; }
+        .card { background: #1F2937; border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-primary { background: linear-gradient(135deg, #7C3AED, #A855F7); color: white; padding: 10px 20px; border-radius: 12px; cursor: pointer; border: none; font-weight: 600; transition: all 0.3s; }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(124,58,237,0.5); }
+        .btn-outline { border: 1px solid #7C3AED; color: #7C3AED; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.3s; background: transparent; }
+        .btn-outline:hover { background: rgba(124,58,237,0.1); }
+        .input-field { width: 100%; background: #1F2937; border: 1px solid #374151; border-radius: 10px; padding: 10px 14px; color: white; transition: all 0.2s; }
+        .input-field:focus { outline: none; border-color: #7C3AED; box-shadow: 0 0 0 2px rgba(124,58,237,0.3); }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton { background: linear-gradient(90deg, #1F2937 25%, #374151 50%, #1F2937 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .report-table th, .report-table td { padding: 8px 12px; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-dark-surface border-r border-white/10 flex flex-col p-4">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-500 to-cyan-400 bg-clip-text text-transparent">GOHAR TRADERS</h1>
+        </div>
+        <nav class="flex-1 space-y-2">
+            <a href="dashboard.html" class="sidebar-link"><i class="fas fa-th-large w-5"></i> Dashboard</a>
+            <a href="inventory.html" class="sidebar-link"><i class="fas fa-boxes w-5"></i> Inventory</a>
+            <a href="sales.html" class="sidebar-link"><i class="fas fa-shopping-cart w-5"></i> Sales</a>
+            <a href="expenses.html" class="sidebar-link"><i class="fas fa-receipt w-5"></i> Expenses</a>
+            <a href="udhar.html" class="sidebar-link"><i class="fas fa-hand-holding-usd w-5"></i> Udhar</a>
+            <a href="reports.html" class="sidebar-link active"><i class="fas fa-chart-bar w-5"></i> Reports</a>
+        </nav>
+        <div class="pt-4 border-t border-white/10">
+            <button onclick="logout()" class="w-full text-left sidebar-link"><i class="fas fa-sign-out-alt w-5"></i> Logout</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold text-white">Reports & Analytics</h2>
+            <div class="flex gap-3 items-end">
+                <div>
+                    <label class="text-xs text-muted">From</label>
+                    <input type="date" id="fromDate" class="input-field w-36">
+                </div>
+                <div>
+                    <label class="text-xs text-muted">To</label>
+                    <input type="date" id="toDate" class="input-field w-36">
+                </div>
+                <button onclick="loadAllReports()" class="btn-primary"><i class="fas fa-search mr-2"></i> Generate</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="summaryCards">
+            <!-- filled by JS -->
+        </div>
+
+        <!-- Detailed Reports Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Brand-wise Sales -->
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4">Brand-wise Sales</h3>
+                <div id="brandWiseContent" class="text-muted text-sm">Select date range and generate.</div>
+            </div>
+            <!-- Category-wise Sales -->
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4">Category-wise Sales</h3>
+                <div id="categoryWiseContent" class="text-muted text-sm">Select date range and generate.</div>
+            </div>
+            <!-- Batch-wise Sales -->
+            <div class="card lg:col-span-2">
+                <h3 class="text-lg font-semibold mb-4">Batch-wise Sales (FIFO)</h3>
+                <div id="batchWiseContent" class="text-muted text-sm">Select date range and generate.</div>
+            </div>
+        </div>
+
+        <!-- Remaining Inventory & Value -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4">Remaining Inventory</h3>
+                <div id="remainingInventoryContent" class="text-muted text-sm">Click generate to load.</div>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4">Current Inventory Value</h3>
+                <div id="inventoryValueContent" class="text-muted text-sm">Click generate to load.</div>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            © All Rights Reserved – Developed & Maintained by Awais Ismail | Powered by Zenvora AI
+        </footer>
+    </main>
+
+    <!-- Loading overlay (only for heavy operations if needed) -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-2xl p-8 text-center">
+            <div class="animate-spin text-4xl mb-4"><i class="fas fa-circle-notch text-purple-500"></i></div>
+            <p class="text-white">Generating reports...</p>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = 'login.html';
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+        // Helper to set skeleton
+        function setSkeleton(elementId, rows = 3, cols = 2) {
+            const el = document.getElementById(elementId);
+            let html = '';
+            for(let i=0; i<rows; i++){
+                html += '<div class="flex gap-2 mb-2">';
+                for(let j=0; j<cols; j++){
+                    html += `<div class="h-4 skeleton w-${j===0 ? '32' : '24'}"></div>`;
+                }
+                html += '</div>';
+            }
+            el.innerHTML = html;
+        }
+
+        function formatCurrency(val) { return 'Rs. ' + (val || 0).toLocaleString(); }
+
+        async function loadAllReports() {
+            const from = document.getElementById('fromDate').value;
+            const to = document.getElementById('toDate').value;
+            if (!from || !to) {
+                showToast('Please select both dates.', 'warning');
+                return;
+            }
+
+            // Show skeletons for summary
+            const summaryCards = document.getElementById('summaryCards');
+            summaryCards.innerHTML = Array(4).fill().map(() => `
+                <div class="card"><div class="h-4 skeleton w-24 mb-2"></div><div class="h-8 skeleton w-32"></div></div>
+            `).join('');
+
+            // Set skeletons for detail sections
+            setSkeleton('brandWiseContent', 3, 2);
+            setSkeleton('categoryWiseContent', 3, 2);
+            setSkeleton('batchWiseContent', 4, 3);
+            setSkeleton('remainingInventoryContent', 3, 2);
+            document.getElementById('inventoryValueContent').innerHTML = '<div class="h-8 skeleton w-32"></div>';
+
+            const params = `from_date=${from}&to_date=${to}`;
+
+            try {
+                // Fetch all reports in parallel
+                const [salesSum, revenue, expenses, profitLoss, brandWise, categoryWise, batchWise, remainingInv, invValue] = await Promise.all([
+                    axios.get(`${API_BASE}/reports/sales-summary?${params}`),
+                    axios.get(`${API_BASE}/reports/revenue?${params}`),
+                    axios.get(`${API_BASE}/reports/expenses?${params}`),
+                    axios.get(`${API_BASE}/reports/profit-loss?${params}`),
+                    axios.get(`${API_BASE}/reports/brand-wise-sales?${params}`),
+                    axios.get(`${API_BASE}/reports/category-wise-sales?${params}`),
+                    axios.get(`${API_BASE}/reports/batch-wise-sales?${params}`),
+                    axios.get(`${API_BASE}/reports/remaining-inventory`),  // not date-filtered, but ok
+                    axios.get(`${API_BASE}/reports/current-inventory-value`)
+                ]);
+
+                // Populate summary cards
+                const summaryData = [
+                    { title: "Total Sales", value: salesSum.data.total_sales, icon: "fa-receipt", color: "text-accent" },
+                    { title: "Revenue", value: formatCurrency(revenue.data.total_revenue), icon: "fa-dollar-sign", color: "text-success" },
+                    { title: "Expenses", value: formatCurrency(expenses.data.total_expenses), icon: "fa-file-invoice", color: "text-error" },
+                    { title: "Net Profit", value: formatCurrency(profitLoss.data.net_profit), icon: "fa-chart-line", color: profitLoss.data.net_profit >=0 ? 'text-success' : 'text-error' },
+                ];
+                summaryCards.innerHTML = summaryData.map(s => `
+                    <div class="card flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="fas ${s.icon} ${s.color} text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-muted">${s.title}</p>
+                            <p class="stat-value ${s.color}">${s.value}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Brand-wise
+                let brandHtml = '<div class="report-table">';
+                brandWise.data.forEach(b => brandHtml += `<div class="flex justify-between border-b border-white/5 py-1"><span>${b.brand}</span><span>${b.total_quantity} sold (${formatCurrency(b.total_revenue)})</span></div>`);
+                brandHtml += '</div>';
+                document.getElementById('brandWiseContent').innerHTML = brandHtml || '<p class="text-muted">No data.</p>';
+
+                // Category-wise
+                let catHtml = '<div class="report-table">';
+                categoryWise.data.forEach(c => catHtml += `<div class="flex justify-between border-b border-white/5 py-1"><span>${c.category_name}</span><span>${c.total_quantity} sold (${formatCurrency(c.total_revenue)})</span></div>`);
+                catHtml += '</div>';
+                document.getElementById('categoryWiseContent').innerHTML = catHtml || '<p class="text-muted">No data.</p>';
+
+                // Batch-wise
+                let batchHtml = '<table class="w-full text-sm"><thead class="text-muted"><tr><th>Batch</th><th>Product</th><th>Qty Sold</th><th>Revenue</th><th>Cost</th><th>Profit</th></tr></thead><tbody>';
+                batchWise.data.forEach(b => batchHtml += `<tr class="border-b border-white/5"><td>${b.batch_number}</td><td>${b.product_name}</td><td>${b.quantity_sold}</td><td>${formatCurrency(b.revenue)}</td><td>${formatCurrency(b.cost)}</td><td>${formatCurrency(b.profit)}</td></tr>`);
+                batchHtml += '</tbody></table>';
+                document.getElementById('batchWiseContent').innerHTML = batchHtml || '<p class="text-muted">No data.</p>';
+
+                // Remaining Inventory
+                let invHtml = '<div class="report-table">';
+                remainingInv.data.forEach(i => invHtml += `<div class="flex justify-between border-b border-white/5 py-1"><span>${i.brand} ${i.size}</span><span>${i.remaining_quantity} units (${formatCurrency(i.total_value)})</span></div>`);
+                invHtml += '</div>';
+                document.getElementById('remainingInventoryContent').innerHTML = invHtml || '<p class="text-muted">No items.</p>';
+
+                // Inventory Value
+                document.getElementById('inventoryValueContent').innerHTML = `<p class="stat-value text-primary">${formatCurrency(invValue.data.total_value)}</p>`;
+
+            } catch (err) {
+                showToast('Failed to load reports. Check dates and try again.', 'error');
+                // Clear skeletons
+                summaryCards.innerHTML = '';
+                document.getElementById('brandWiseContent').innerHTML = '<p class="text-error">Error loading.</p>';
+                document.getElementById('categoryWiseContent').innerHTML = '<p class="text-error">Error loading.</p>';
+                document.getElementById('batchWiseContent').innerHTML = '<p class="text-error">Error loading.</p>';
+                document.getElementById('remainingInventoryContent').innerHTML = '<p class="text-error">Error loading.</p>';
+                document.getElementById('inventoryValueContent').innerHTML = '<p class="text-error">Error loading.</p>';
+            }
+        }
+
+        // Set default dates to today
+        (function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fromDate').value = today;
+            document.getElementById('toDate').value = today;
+        })();
+    </script>
+</body>
+</html>

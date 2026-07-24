@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOHAR TRADERS - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        secondary: '#A855F7',
+                        accent: '#06B6D4',
+                        dark: { bg: '#0B1120', surface: '#111827', card: '#1F2937' },
+                        muted: '#94A3B8',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #0B1120; font-family: 'Segoe UI', sans-serif; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94A3B8; transition: all 0.2s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(124,58,237,0.1); color: #7C3AED; }
+        .card { background: #1F2937; border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton { background: linear-gradient(90deg, #1F2937 25%, #374151 50%, #1F2937 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <aside class="w-64 bg-dark-surface border-r border-white/10 flex flex-col p-4">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-500 to-cyan-400 bg-clip-text text-transparent">GOHAR TRADERS</h1>
+        </div>
+        <nav class="flex-1 space-y-2">
+            <a href="dashboard.html" class="sidebar-link active"><i class="fas fa-th-large w-5"></i> Dashboard</a>
+            <a href="inventory.html" class="sidebar-link"><i class="fas fa-boxes w-5"></i> Inventory</a>
+            <a href="sales.html" class="sidebar-link"><i class="fas fa-shopping-cart w-5"></i> Sales</a>
+            <a href="expenses.html" class="sidebar-link"><i class="fas fa-receipt w-5"></i> Expenses</a>
+            <a href="udhar.html" class="sidebar-link"><i class="fas fa-hand-holding-usd w-5"></i> Udhar</a>
+            <a href="reports.html" class="sidebar-link"><i class="fas fa-chart-bar w-5"></i> Reports</a>
+        </nav>
+        <div class="pt-4 border-t border-white/10">
+            <button onclick="logout()" class="w-full text-left sidebar-link"><i class="fas fa-sign-out-alt w-5"></i> Logout</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-semibold text-white">Dashboard</h2>
+            <span id="userRole" class="text-sm text-muted bg-dark-card px-3 py-1 rounded-full">Loading...</span>
+        </div>
+
+        <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- 8 skeleton cards -->
+        </div>
+
+        <div class="card mb-6">
+            <h3 class="text-lg font-semibold mb-4">⚠️ Low Stock Alerts</h3>
+            <div id="lowStockList" class="space-y-2"><div class="h-4 skeleton w-3/4"></div></div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-lg font-semibold mb-4">✅ Completed Batches</h3>
+            <div id="batchAlertList" class="space-y-2"><div class="h-4 skeleton w-3/4"></div></div>
+        </div>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            © All Rights Reserved – Developed & Maintained by Awais Ismail | Powered by Zenvora AI
+        </footer>
+    </main>
+
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-2xl p-8 text-center">
+            <div class="animate-spin text-4xl mb-4"><i class="fas fa-circle-notch text-purple-500"></i></div>
+            <p class="text-white">Loading dashboard...</p>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) window.location.href = 'login.html';
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+        async function loadUser() {
+            try {
+                const res = await axios.get(`${API_BASE}/me`);
+                document.getElementById('userRole').textContent = res.data.role;
+            } catch (err) { if (err.response?.status === 401) logout(); }
+        }
+
+        async function loadDashboard() {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = Array(8).fill().map(() => `
+                <div class="card flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full skeleton"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-4 skeleton w-20"></div>
+                        <div class="h-8 skeleton w-32"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            try {
+                const res = await axios.get(`${API_BASE}/dashboard/`);
+                const data = res.data;
+
+                const stats = [
+                    { title: "Today's Sales", value: `Rs. ${data.today_sales.toLocaleString()}`, icon: 'fa-dollar-sign', color: 'text-success' },
+                    { title: "Today's Profit/Loss", value: `Rs. ${data.today_profit_loss.toLocaleString()}`, icon: 'fa-chart-line', color: data.today_profit_loss >= 0 ? 'text-success' : 'text-error' },
+                    { title: "Top Selling (Today)", value: data.top_selling_product || 'N/A', icon: 'fa-star', color: 'text-warning' },
+                    { title: "Most Sold (All Time)", value: data.most_sold_product || 'N/A', icon: 'fa-trophy', color: 'text-accent' },
+                    { title: "Current Inventory Value", value: `Rs. ${data.current_inventory_value.toLocaleString()}`, icon: 'fa-boxes', color: 'text-primary' },
+                    { title: "Total Receivables", value: `Rs. ${data.total_receivables.toLocaleString()}`, icon: 'fa-arrow-right', color: 'text-success' },
+                    { title: "Total Payables", value: `Rs. ${data.total_payables.toLocaleString()}`, icon: 'fa-arrow-left', color: 'text-error' },
+                    { title: "Last Sale", value: data.last_sale ? `Rs. ${data.last_sale.total_amount.toLocaleString()} at ${data.last_sale.time}` : 'No sales yet', icon: 'fa-clock', color: 'text-muted' },
+                ];
+
+                statsGrid.innerHTML = stats.map(s => `
+                    <div class="card flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                            <i class="fas ${s.icon} ${s.color} text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-muted">${s.title}</p>
+                            <p class="stat-value ${s.color}">${s.value}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                const lowDiv = document.getElementById('lowStockList');
+                if (data.low_stock_alerts.length === 0) {
+                    lowDiv.innerHTML = '<p class="text-muted">No low stock items.</p>';
+                } else {
+                    lowDiv.innerHTML = data.low_stock_alerts.map(item => `
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span>⚠️ ${item.brand} ${item.size}</span>
+                            <span class="text-warning font-semibold">${item.remaining_quantity} units left</span>
+                        </div>
+                    `).join('');
+                }
+
+                const batchDiv = document.getElementById('batchAlertList');
+                if (data.batch_alerts.length === 0) {
+                    batchDiv.innerHTML = '<p class="text-muted">No completed batches.</p>';
+                } else {
+                    batchDiv.innerHTML = data.batch_alerts.map(b => `
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span>✅ ${b.batch_number} - ${b.product_name}</span>
+                            <span class="text-muted text-sm">completed</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                if (err.response?.status === 401) logout();
+                showToast('Failed to load dashboard data.', 'error');
+            }
+        }
+
+        loadUser();
+        loadDashboard();
+    </script>
+</body>
+</html>

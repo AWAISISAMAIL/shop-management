@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOHAR TRADERS - Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C3AED',
+                        secondary: '#A855F7',
+                        accent: '#06B6D4',
+                        dark: { bg: '#0B1120', surface: '#111827', card: '#1F2937' },
+                        muted: '#94A3B8',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        error: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #0B1120; font-family: 'Segoe UI', sans-serif; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 12px; color: #94A3B8; transition: all 0.2s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(124,58,237,0.1); color: #7C3AED; }
+        .card { background: #1F2937; border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-primary { background: linear-gradient(135deg, #7C3AED, #A855F7); color: white; padding: 10px 20px; border-radius: 12px; cursor: pointer; border: none; font-weight: 600; transition: all 0.3s; }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(124,58,237,0.5); }
+        .btn-outline { border: 1px solid #7C3AED; color: #7C3AED; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.3s; background: transparent; }
+        .btn-outline:hover { background: rgba(124,58,237,0.1); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 50; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #111827; border-radius: 20px; padding: 24px; max-width: 500px; width: 90%; border: 1px solid rgba(255,255,255,0.1); }
+        .input-field { width: 100%; background: #1F2937; border: 1px solid #374151; border-radius: 10px; padding: 10px 14px; color: white; transition: all 0.2s; }
+        .input-field:focus { outline: none; border-color: #7C3AED; box-shadow: 0 0 0 2px rgba(124,58,237,0.3); }
+        select.input-field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394A3B8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11.5l-5-5h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton { background: linear-gradient(90deg, #1F2937 25%, #374151 50%, #1F2937 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+    <aside class="w-64 bg-dark-surface border-r border-white/10 flex flex-col p-4">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-500 to-cyan-400 bg-clip-text text-transparent">GOHAR TRADERS</h1>
+        </div>
+        <nav class="flex-1 space-y-2">
+            <a href="dashboard.html" class="sidebar-link"><i class="fas fa-th-large w-5"></i> Dashboard</a>
+            <a href="inventory.html" class="sidebar-link active"><i class="fas fa-boxes w-5"></i> Inventory</a>
+            <a href="sales.html" class="sidebar-link"><i class="fas fa-shopping-cart w-5"></i> Sales</a>
+            <a href="expenses.html" class="sidebar-link"><i class="fas fa-receipt w-5"></i> Expenses</a>
+            <a href="udhar.html" class="sidebar-link"><i class="fas fa-hand-holding-usd w-5"></i> Udhar</a>
+            <a href="reports.html" class="sidebar-link"><i class="fas fa-chart-bar w-5"></i> Reports</a>
+        </nav>
+        <div class="pt-4 border-t border-white/10">
+            <button onclick="logout()" class="w-full text-left sidebar-link"><i class="fas fa-sign-out-alt w-5"></i> Logout</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold text-white">Inventory Management</h2>
+            <button onclick="openAddProductModal()" class="btn-primary"><i class="fas fa-plus mr-2"></i> Add Product</button>
+        </div>
+
+        <div id="categoryTabs" class="flex gap-2 mb-6 flex-wrap">
+            <button data-category="" class="px-4 py-2 rounded-xl text-sm bg-primary text-white">All</button>
+        </div>
+
+        <div class="mb-6">
+            <input type="text" id="searchInput" placeholder="Search by brand..." class="input-field max-w-md" oninput="loadProducts()">
+        </div>
+
+        <div class="card overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="text-muted border-b border-white/10">
+                    <tr>
+                        <th class="py-3">Brand</th>
+                        <th class="py-3">Category</th>
+                        <th class="py-3">Size</th>
+                        <th class="py-3">Container</th>
+                        <th class="py-3">Total Stock</th>
+                        <th class="py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody">
+                    <!-- Skeleton rows -->
+                </tbody>
+            </table>
+            <div id="emptyState" class="text-center py-12 text-muted hidden">
+                <i class="fas fa-box-open text-5xl mb-3"></i>
+                <p>No products found. Add your first product.</p>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            © All Rights Reserved – Developed & Maintained by Awais Ismail | Powered by Zenvora AI
+        </footer>
+    </main>
+
+    <!-- Modals -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4">New Product</h3>
+            <form id="addProductForm" class="space-y-4">
+                <select id="prodCategory" class="input-field" required></select>
+                <input id="prodBrand" placeholder="Brand (e.g., Pepsi, Nestle)" class="input-field" required>
+                <input id="prodContainer" placeholder="Container type (Glass/Plastic Bottle)" class="input-field">
+                <input id="prodSize" placeholder="Size (e.g., 500ml, 1L)" class="input-field" required>
+                <input id="prodCustomSize" placeholder="Custom size (optional)" class="input-field">
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" onclick="closeModal('addProductModal')" class="btn-outline">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="addBatchModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-xl font-semibold mb-4">Add Batch for <span id="batchProductName"></span></h3>
+            <form id="addBatchForm" class="space-y-4">
+                <input type="hidden" id="batchProductId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-sm text-muted">Quantity</label><input type="number" id="batchQty" class="input-field" required min="1"></div>
+                    <div><label class="text-sm text-muted">Packs (optional)</label><input type="number" id="batchPacks" class="input-field"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-sm text-muted">Units per Pack</label><input type="number" id="batchUnitsPerPack" class="input-field"></div>
+                    <div><label class="text-sm text-muted">Supplier</label><input id="batchSupplier" class="input-field"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-sm text-muted">Purchase Price/Unit</label><input type="number" step="0.01" id="batchPurchasePrice" class="input-field" required></div>
+                    <div><label class="text-sm text-muted">Selling Price/Unit</label><input type="number" step="0.01" id="batchSellingPrice" class="input-field" required></div>
+                </div>
+                <div><label class="text-sm text-muted">Notes</label><textarea id="batchNotes" rows="2" class="input-field"></textarea></div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button type="button" onclick="closeModal('addBatchModal')" class="btn-outline">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Batch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="viewBatchesModal" class="modal">
+        <div class="modal-content max-w-2xl">
+            <h3 class="text-xl font-semibold mb-4">Batches of <span id="batchListProductName"></span></h3>
+            <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                <table class="w-full text-sm">
+                    <thead class="text-muted border-b border-white/10">
+                        <tr>
+                            <th class="py-2">Batch No.</th>
+                            <th class="py-2">Qty</th>
+                            <th class="py-2">Remaining</th>
+                            <th class="py-2">Purchase</th>
+                            <th class="py-2">Selling</th>
+                            <th class="py-2">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchTableBody"></tbody>
+                </table>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button onclick="closeModal('viewBatchesModal')" class="btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-2xl p-8 text-center">
+            <div class="animate-spin text-4xl mb-4"><i class="fas fa-circle-notch text-purple-500"></i></div>
+            <p class="text-white" id="loadingMessage">Processing...</p>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const token = localStorage.getItem('access_token');
+        if (!token) window.location.href = 'login.html';
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        let currentCategoryId = '';
+        let products = [];
+        let categories = [];
+        let userRole = '';
+
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+        function showLoading(msg) { document.getElementById('loadingMessage').textContent = msg || 'Processing...'; document.getElementById('loadingOverlay').classList.remove('hidden'); }
+        function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        async function loadUser() {
+            try {
+                const res = await axios.get(`${API_BASE}/me`);
+                userRole = res.data.role;
+            } catch (err) { if (err.response?.status === 401) logout(); }
+        }
+
+        async function loadCategories() {
+            const res = await axios.get(`${API_BASE}/inventory/categories`);
+            categories = res.data;
+            const tabs = document.getElementById('categoryTabs');
+            tabs.innerHTML = '<button data-category="" class="px-4 py-2 rounded-xl text-sm bg-primary text-white">All</button>';
+            categories.forEach(cat => {
+                tabs.innerHTML += `<button data-category="${cat.id}" class="px-4 py-2 rounded-xl text-sm bg-dark-card text-muted hover:bg-primary hover:text-white">${cat.name}</button>`;
+            });
+            tabs.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabs.querySelectorAll('button').forEach(b => { b.classList.remove('bg-primary','text-white'); b.classList.add('bg-dark-card','text-muted'); });
+                    btn.classList.add('bg-primary','text-white');
+                    btn.classList.remove('bg-dark-card','text-muted');
+                    currentCategoryId = btn.dataset.category;
+                    loadProducts();
+                });
+            });
+            document.getElementById('prodCategory').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        async function loadProducts() {
+            const search = document.getElementById('searchInput').value;
+            let url = `${API_BASE}/inventory/products?`;
+            if (currentCategoryId) url += `category_id=${currentCategoryId}&`;
+            if (search) url += `search=${encodeURIComponent(search)}&`;
+
+            const tbody = document.getElementById('productTableBody');
+            // Show skeleton
+            let skeletonHTML = '';
+            for(let i=0; i<5; i++) skeletonHTML += `<tr class="border-b border-white/5"><td class="py-3"><div class="h-4 skeleton w-20"></div></td><td class="py-3"><div class="h-4 skeleton w-16"></div></td><td class="py-3"><div class="h-4 skeleton w-16"></div></td><td class="py-3"><div class="h-4 skeleton w-16"></div></td><td class="py-3"><div class="h-4 skeleton w-12"></div></td><td class="py-3"><div class="h-4 skeleton w-24"></div></td></tr>`;
+            tbody.innerHTML = skeletonHTML;
+
+            try {
+                const res = await axios.get(url);
+                products = res.data;
+
+                const stockMap = {};
+                try {
+                    const invRes = await axios.get(`${API_BASE}/reports/remaining-inventory${currentCategoryId ? '?category_id='+currentCategoryId : ''}`);
+                    invRes.data.forEach(item => stockMap[item.product_id] = item.remaining_quantity);
+                } catch(e) {}
+
+                const empty = document.getElementById('emptyState');
+                if (products.length === 0) {
+                    tbody.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                empty.classList.add('hidden');
+                tbody.innerHTML = products.map(p => {
+                    const stock = stockMap[p.id] || 0;
+                    const lowStock = stock < 5 && stock > 0 ? 'text-warning font-bold' : '';
+                    const catName = categories.find(c => c.id === p.category_id)?.name || '';
+                    return `
+                        <tr class="border-b border-white/5 hover:bg-white/5">
+                            <td class="py-3">${p.brand}</td>
+                            <td class="py-3 text-muted">${catName}</td>
+                            <td class="py-3">${p.size}${p.custom_size ? ' ('+p.custom_size+')' : ''}</td>
+                            <td class="py-3">${p.container_type || '-'}</td>
+                            <td class="py-3 ${lowStock}">${stock}</td>
+                            <td class="py-3 flex gap-2">
+                                <button onclick="openAddBatchModal('${p.id}','${p.brand}')" class="text-accent hover:underline text-xs"><i class="fas fa-plus-circle"></i> Batch</button>
+                                <button onclick="viewBatches('${p.id}','${p.brand}')" class="text-primary hover:underline text-xs"><i class="fas fa-eye"></i> View</button>
+                                ${userRole === 'owner' ? `<button onclick="deleteProduct('${p.id}')" class="text-error hover:underline text-xs"><i class="fas fa-trash"></i></button>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                showToast('Failed to load products.', 'error');
+            }
+        }
+
+        function openAddProductModal() {
+            document.getElementById('addProductForm').reset();
+            openModal('addProductModal');
+        }
+
+        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                category_id: document.getElementById('prodCategory').value,
+                brand: document.getElementById('prodBrand').value,
+                container_type: document.getElementById('prodContainer').value || null,
+                size: document.getElementById('prodSize').value,
+                custom_size: document.getElementById('prodCustomSize').value || null
+            };
+            showLoading('Adding product...');
+            try {
+                await axios.post(`${API_BASE}/inventory/products`, data);
+                closeModal('addProductModal');
+                loadProducts();
+                showToast('Product added successfully!', 'success');
+            } catch (err) {
+                showToast('Error: ' + (err.response?.data?.detail || 'Failed'), 'error');
+            } finally { hideLoading(); }
+        });
+
+        async function deleteProduct(id) {
+            showConfirm('Delete this product? It will be hidden from inventory.', async () => {
+                showLoading('Deleting...');
+                try {
+                    await axios.delete(`${API_BASE}/inventory/products/${id}`);
+                    loadProducts();
+                    showToast('Product deleted.', 'warning');
+                } catch (err) {
+                    showToast('Error: ' + (err.response?.data?.detail || 'Delete failed'), 'error');
+                } finally { hideLoading(); }
+            });
+        }
+
+        function openAddBatchModal(productId, productName) {
+            document.getElementById('batchProductId').value = productId;
+            document.getElementById('batchProductName').textContent = productName;
+            document.getElementById('addBatchForm').reset();
+            openModal('addBatchModal');
+        }
+
+        document.getElementById('addBatchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                product_id: document.getElementById('batchProductId').value,
+                quantity: parseInt(document.getElementById('batchQty').value),
+                packs: document.getElementById('batchPacks').value ? parseInt(document.getElementById('batchPacks').value) : null,
+                units_per_pack: document.getElementById('batchUnitsPerPack').value ? parseInt(document.getElementById('batchUnitsPerPack').value) : null,
+                purchase_price_per_unit: parseFloat(document.getElementById('batchPurchasePrice').value),
+                selling_price_per_unit: parseFloat(document.getElementById('batchSellingPrice').value),
+                supplier: document.getElementById('batchSupplier').value || null,
+                notes: document.getElementById('batchNotes').value || null
+            };
+            showLoading('Adding batch...');
+            try {
+                await axios.post(`${API_BASE}/inventory/batches`, data);
+                closeModal('addBatchModal');
+                loadProducts();
+                showToast('Batch added successfully!', 'success');
+            } catch (err) {
+                showToast('Error: ' + (err.response?.data?.detail || 'Failed'), 'error');
+            } finally { hideLoading(); }
+        });
+
+        async function viewBatches(productId, productName) {
+            document.getElementById('batchListProductName').textContent = productName;
+            const tbody = document.getElementById('batchTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center">Loading...</td></tr>';
+            openModal('viewBatchesModal');
+            try {
+                const res = await axios.get(`${API_BASE}/inventory/batches?product_id=${productId}`);
+                const batches = res.data;
+                if (batches.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-muted">No batches found.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = batches.map(b => `
+                    <tr class="border-b border-white/5">
+                        <td class="py-2">${b.batch_number}</td>
+                        <td class="py-2">${b.quantity}</td>
+                        <td class="py-2">${b.remaining_quantity}</td>
+                        <td class="py-2">${b.purchase_price_per_unit}</td>
+                        <td class="py-2">${b.selling_price_per_unit}</td>
+                        <td class="py-2">${b.is_completed ? '<span class="text-success">Completed</span>' : '<span class="text-accent">Active</span>'}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-error">Failed to load batches.</td></tr>';
+                showToast('Could not load batches.', 'error');
+            }
+        }
+
+        (async function() {
+            await loadUser();
+            await loadCategories();
+            loadProducts();
+        })();
+    </script>
+</body>
+</html>
